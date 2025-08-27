@@ -466,6 +466,8 @@ class Products(models.Model):
 - **Fallback 로직**: 번역이 없으면 한국어 자동 표시 (빈 화면 방지)
 - **번역 상태 관리**: Django Admin에서 ✅완료/⚠️부분완료/❌미완료 표시
 
+---
+
 ### **조은이(Frontend)**
 
 **1. 프론트엔드 UI/UX 구현**
@@ -495,6 +497,32 @@ class Products(models.Model):
 **6. 문서화 및 SEO**
 - 메인/문의하기 페이지 및 컴포넌트 JSDoc 작성
 - 메인/문의하기 페이지 Meta 태그 추가로 SEO 개선
+
+---
+
+### **김성현(Frontend)**
+
+**1. 브랜드 소개 페이지**
+- `ScrollNav`, `FadeInOut` 애니메이션 컴포넌트 개발 및 섹션별 UI/UX 구현
+- 루트 페이지 SSR, 섹션 컴포넌트 CSR 구조 설계로 SEO 최적화 및 인터랙티브 UI 구현
+- 브랜드 소개, 철학, 제주 말차, 연혁 각 섹션 콘텐츠 구조화
+
+**2. 체험형 콘텐츠 (Glossy Pick)**
+- React Hook/Custom Hook 기반 퀴즈 흐름 및 추천 점수 계산 로직 개발
+- 개인 맞춤 메뉴 추천 기능 구현
+- 카드형 질문 UI, 결과 페이지 구성, 다시하기 기능, 모바일 최적화 포함
+- Web Share API & Fallback, React-Toastify 연동으로 공유/복사 기능 및 실시간 피드백 제공
+- Next.js `useSearchParams`와 `usePathname`을 활용하여 추천 메뉴를 URL 파라미터로 반영, 결과 페이지를 즉시 공유 가능하도록 구현
+
+**3. 다국어 지원**
+- 브랜드 소개 페이지 및 체험형 콘텐츠 내 텍스트 번역문 작성 및 적용
+- next-intl 기반 i18n 적용, URL locale 구조 설계로 SEO 최적화
+- 퀴즈 결과 및 공유 메시지 다국어 처리
+
+**4. 공통 컴포넌트 및 스타일**
+- 공통 버튼, 폼 요소 등 재사용 가능한 UI 컴포넌트 구현
+- `globals.scss`에 공통 스타일 작성, `variables.scss`에 컬러, 폰트, 폰트 웨이트, 폰트 사이즈 변수 정의
+- 반응형 Footer 컴포넌트 개발 및 사이트 전반 적용
 
 ---
 
