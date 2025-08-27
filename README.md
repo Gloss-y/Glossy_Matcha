@@ -4,7 +4,7 @@
 
 ## 1. 📌 프로젝트 개요
 
-**Glossy Matcha**는 **듀얼 MVP 아키텍처**를 기반으로 한 **실제 비즈니스에서 운영되는 라이브 서비스**입니다
+**Glossy Matcha**는 **듀얼 MVP 아키텍처**를 기반으로 한 **실제 기업 글로시 말차**에서 운영되는 **라이브 서비스**입니다
   - ✅ **현재 운영 중**: 고객들이 사용하는 프로덕션 환경
   - ✅ **실무 요구사항**: 기업 대표님의 피드백과 요구사항을 반영
   - ✅ **비즈니스 임팩트**: 브랜드 인지도 향상
@@ -118,12 +118,135 @@
     <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=SQLite&logoColor=white">
     <img src="https://img.shields.io/badge/Chart.js-FF6384?style=for-the-badge&logo=Chart.js&logoColor=white">
 
+    **Django Templates + DRF 이중구조 사용 이유**
+
+    > **직면한 문제들**
+
+    **문제 1: 서로 다른 두 서비스의 상반된 요구사항**
+    ```
+    매장 운영 대시보드 (B2B)           vs        글로벌 브랜드 웹사이트 (B2C)
+    ─────────────────────────────────────────────────────────────────────
+    • 복잡한 차트와 테이블 렌더링               • 모던한 SPA 경험
+    • Excel 다운로드, 실시간 계산              • API 기반 프론트엔드 연동  
+    • 빠른 개발과 즉시 배포 필요                • 확장 가능한 RESTful API
+    • 관리자만 사용 (보안 < 편의성)             • 글로벌 사용자 (확장성 > 속도)
+    ```
+
+    **문제 2: 개발 리소스와 시간의 제약**
+    - **19일 개발 기간**: 두 개의 완전히 다른 서비스를 동시 개발
+    - **4인 팀**: 백엔드 1명이 두 서비스 모두 담당
+    - **제로베이스**: 기획서, 디자인 없이 요구사항부터 도출
+
+    > **선택한 해결책**
+
+    **해결책 1: Django Templates (매장 운영 시스템)**
+    ```python
+    # 문제: 복잡한 매출 데이터를 차트로 빠르게 시각화 필요
+    # 해결: 서버사이드에서 Chart.js 데이터 직접 생성
+    def dashboard_view(request):
+        monthly_data = MonthlySales.objects.all()
+        chart_data = {
+            'labels': [f"{sale.year}-{sale.month:02d}" for sale in monthly_data],
+            'datasets': [{
+                'data': [float(sale.total_sales) for sale in monthly_data]
+            }]
+        }
+        return render(request, 'dashboard.html', {'chart_data': chart_data})
+    ```
+
+    - **선택 이유:**
+      - **즉시 렌더링**: 복잡한 비즈니스 로직을 서버에서 처리 후 완성된 HTML 전송
+      - **Excel 생성**: `openpyxl`로 서버에서 직접 Excel 파일 생성하여 다운로드
+      - **빠른 개발**: Django Admin 활용으로 CRUD 화면 자동 생성
+
+    **해결책 2: Django REST Framework (브랜드 웹사이트)**
+    ```python
+    # 문제: Next.js 프론트엔드와 연동하며 다국어 API 제공
+    # 해결: 언어별 데이터 처리 로직을 API에서 분리
+    class ProductListAPIView(generics.ListAPIView):
+        def get_queryset(self):
+            lang = self.request.query_params.get('lang', 'ko')
+            return Products.objects.all()
+
+        def list(self, request, *args, **kwargs):
+            queryset = self.get_queryset()
+            serializer = ProductListSerializer(queryset, many=True, 
+                                             context={'language': request.query_params.get('lang', 'ko')})
+            return Response(serializer.data)
+    ```
+
+    - **선택 이유:**
+      - **프론트엔드 분리**: Next.js가 API만 호출하여 모던 SPA 구현
+      - **확장성**: API 버저닝, 캐시 전략 적용 가능
+      - **글로벌 대응**: 언어 파라미터로 다국어 데이터 제공
+
+    > **결과**
+
+    **결과 1: 개발 효율성 극대화**
+    - **공통 모델 재사용**: 하나의 Django 프로젝트에서 두 서비스 모두 제공
+    - **단일 배포 파이프라인**: AWS Lightsail 하나로 두 서비스 동시 운영
+    - **개발 시간 단축**: Templates로 빠른 프로토타이핑 → DRF로 API 확장
+
+    **결과 2: 비즈니스 요구사항 완벽 충족**
+    ```
+    매장 운영 시스템 성과:
+    - 대시보드 로딩 속도 극대화 (SSR 효과)
+    - Excel 리포트 원클릭 다운로드
+    - Chart.js 실시간 매출 차트 구현
+
+    브랜드 웹사이트 성과:
+    - Next.js와 완벽한 API 연동
+    - 다국어 fallback 로직으로 UX 향상
+    - RESTful API로 향후 모바일 앱 확장 준비
+    ```
+
+    **결과 3: 확장 가능한 아키텍처 구축**
+    - **점진적 마이그레이션**: Templates → API 전환 가능한 구조
+    - **서비스 분리 준비**: 필요시 두 서비스를 독립적으로 스케일링 가능
+    - **기술 스택 다양성**: 팀원들의 다양한 기술 스택 경험 기회 제공
+
+    > **비즈니스 임팩트**
+
+    - **정량적 성과:**
+      - **개발 기간**: 19일만에 두 개 서비스 동시 구현 완료
+      - **운영 비용**: 단일 서버로 두 서비스 운영
+      - **보안 강화**: HTTPS 적용 + 서브도메인 난독화로 보안 수준 향상
+
+    - **정성적 성과:**
+      - **사용자 만족도**: 매장 직원들의 업무 효율성 개선
+      - **브랜드 가치**: 글로벌 수준의 브랜드 웹사이트 구축
+      - **기술 부채 최소화**: 명확한 관심사 분리로 유지보수성 확보
+
+    > **기술적 최적화**
+
+    - **Templates**: 복잡한 차트, Excel 생성, 서버 리소스 최적화
+    - **DRF**: 캐시 전략, API 버저닝, 프론트엔드 분리
+
+    > **개발 효율성**
+
+    - **공통 모델 재사용**: 하나의 데이터베이스로 두 서비스 제공
+    - **점진적 마이그레이션**: 필요시 Templates → API 전환 가능
+    - **단일 배포**: 하나의 Django 프로젝트로 유지보수 간소화
+
 - **Frontend Tech**:
 
     <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=Next.js&logoColor=white">
     <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=TypeScript&logoColor=white">
     <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=React&logoColor=black">
     <img src="https://img.shields.io/badge/Sass-CC6699?style=for-the-badge&logo=Sass&logoColor=white">
+    
+    **Next.js 사용 이유**
+
+    > **다국어 지원 최적화**
+    - Next.js의 동적 라우팅을 활용해 /ko, /en과 같은 언어별 경로를 유연하게 관리
+    - 한국어 → 영어 전환 시 같은 페이지 구조 유지
+    - 파일 하나로 여러 언어 페이지 관리 가능
+
+    > **SSR & SEO 최적화**
+    - 서버에서 미리 렌더링: 페이지를 서버에서 완성해서 전송하여 빠른 첫 화면 로딩
+    - 검색엔진 크롤링 용이: 완성된 HTML을 검색엔진에 제공하여 검색 결과 노출 최적화
+    - 언어별 검색 노출: 한국어/영어 페이지가 각각 독립적으로 검색 결과에 노출
+    - JavaScript 없이도 콘텐츠 접근: 모든 콘텐츠를 검색엔진이 즉시 수집 가능
 
 - **Deployment & Infrastructure Tools**:
 
@@ -292,7 +415,90 @@
 
 ---
 
-## 7-1. 👩🏻‍💻 Backend 시스템
+## 7. 📌 개인 핵심 기여도
+### **심희현(Backend & 팀장)**
+
+**1. DevOps & 보안**
+> **AWS Lightsail 배포 파이프라인**
+```bash
+GitHub Push → GitHub Actions → 자동 테스트 → AWS 배포 → 서비스 재시작
+```
+
+> **보안 강화 조치**
+- **HTTPS 인증서**: Let's Encrypt 자동 갱신
+- **서브도메인 난독화**: `a92fj39af.glossymatcha.com`, `x81fj32kd.glossymatcha.com` (무차별 대입 공격 방지)
+- **IP 접속 차단**: 도메인 기반 접근만 허용
+
+**2. 실무 중심의 비즈니스 로직**
+
+> **매출 관리 자동화**
+```python
+# 일별 → 월별 → 연별 매출 자동 집계
+def update_monthly_sales(daily_sales):
+    monthly, created = MonthlySales.objects.get_or_create(
+        year=daily_sales.date.year,
+        month=daily_sales.date.month,
+        defaults={'total_sales': 0, 'total_cost': 0}
+    )
+    # 실시간 합계 업데이트
+```
+
+> **Excel 리포트 시스템**
+- **전문적인 포맷팅**: 금액 콤마 표시, 퍼센트 자동 변환
+- **원클릭 다운로드**: 버튼 클릭 즉시 완성된 엑셀 파일 제공
+- **다양한 리포트**: 전체/개별 월간/연간 매출 분석
+
+**3. 글로벌 서비스 준비**
+
+> **다국어 데이터 모델 설계**
+```python
+class Products(models.Model):
+    name = models.CharField(max_length=200)           # 한국어
+    name_en = models.CharField(max_length=200)        # 영어
+    description = models.TextField()                  # 한국어
+    description_en = models.TextField()               # 영어
+    
+    def get_localized_name(self, lang='ko'):
+        return self.name_en if lang == 'en' and self.name_en else self.name
+```
+
+> **지능형 언어 처리**
+- **Fallback 로직**: 번역이 없으면 한국어 자동 표시 (빈 화면 방지)
+- **번역 상태 관리**: Django Admin에서 ✅완료/⚠️부분완료/❌미완료 표시
+
+### **조은이(Frontend)**
+
+**1. 프론트엔드 UI/UX 구현**
+- 반응형 헤더 디자인 및 구현
+- 반응형 푸터 디자인
+- 헤더 다국어 전환 버튼 및 모바일 사이드바 내비게이션 기능 구현
+
+**2. 메인 페이지**
+- 피그마 디자인 및 문구 기획
+- Intersection Observer 기반 스크롤 애니메이션 적용
+- 메인 영상(mp4/webp) 삽입 및 Mute 버튼 구현
+- 반응형 구조로 PC/Mobile 별도 컴포넌트 설계 및 구현
+
+**3. 문의하기 페이지**
+- 디자인 및 문구 기획
+- 문의 Form 제작 및 백엔드 API(POST) 연동
+- 반응형 UI로 기기별 최적화
+
+**4. 성능 및 최적화**
+- Next.js Image 태그 활용
+- jpg, png → webp 변환(ffmpeg 사용)으로 용량 절감 및 로딩 속도 개선
+
+**5. 다국어 지원**
+- next-intl 기반 i18n 구조 설계 (폴더 구조, middleware, next.config 설정)
+- 헤더/메인/문의하기 페이지 다국어 번역 적용
+
+**6. 문서화 및 SEO**
+- 메인/문의하기 페이지 및 컴포넌트 JSDoc 작성
+- 메인/문의하기 페이지 Meta 태그 추가로 SEO 개선
+
+---
+
+## 8-1. 👩🏻‍💻 Backend 시스템
 
 ### 매장 운영 대시보드 시스템
 
@@ -388,7 +594,7 @@ const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/inquiries/`, {
 
 ---
 
-## 7-2. 👩🏻‍💻 Back / Front 협업 시스템
+## 8-2. 👩🏻‍💻 Back / Front 협업 시스템
 
 ### 제품 데이터 통합 관리 시스템
 
@@ -445,7 +651,7 @@ Django Admin 제품 수정 → 즉시 DB 저장 → Next.js API 호출 시 최�
 
 ---
 
-## 8. 🔌 API 명세
+## 9. 🔌 API 명세
 
 ### 글로시 말차 브랜드 사이트 (협업 API)
 
@@ -466,7 +672,7 @@ Django Admin 제품 수정 → 즉시 DB 저장 → Next.js API 호출 시 최�
 
 ---
 
-## 9. 📑 매장 운영 대시보드 URL (내부 MVP)
+## 10. 📑 매장 운영 대시보드 URL (내부 MVP)
 
 ### 메인 대시보드
 
@@ -536,7 +742,7 @@ Django Admin 제품 수정 → 즉시 DB 저장 → Next.js API 호출 시 최�
 
 ---
 
-## 10. 🌐 배포 정보
+## 11. 🌐 배포 정보
 
 ### 프론트엔드 (Vercel)
 - **자동 배포**: GitHub main branch 푸시 시 Vercel 자동 배포
@@ -585,29 +791,6 @@ CSRF_COOKIE_SECURE = True
 - **보안 헤더**: HSTS, XSS Protection, Content-Type 보안
 - **접근 제어**: IP 직접 접속 차단, 도메인 기반 접근만 허용
 - **CORS 정책**: 허용된 도메인만 API 접근 가능
-
----
-
-## 11. 🏆 프로젝트 성과
-
-### 기술적 성과
-- **보안 강화**: HTTPS 적용 및 도메인 기반 서비스 분리
-- **웹 기술 스택**: Next.js 15 + Django 5.2 최신 기술 적용
-- **타입 안전성**: TypeScript 도입으로 런타임 에러 최소화
-- **반응형 디자인**: 모든 디바이스에서 최적화된 사용자 경험
-- **다국어 지원**: next-intl을 활용한 효율적인 국제화 구현
-
-### 비즈니스 성과
-- **운영 효율성**: Django 템플릿 기반 매장 운영 대시보드로 업무 효율 개선
-- **브랜드 가치 향상**: 프리미엄 브랜드 이미지 구축
-- **고객 접점 확대**: 온라인 브랜드 경험 제공
-- **글로벌 준비**: 다국어 지원으로 해외 진출 기반 마련
-
-### 학습 성과
-- **풀스택 개발**: 프론트엔드부터 백엔드까지 전체 시스템 구축
-- **DevOps**: 클라우드 배포 및 HTTPS 보안 설정 경험
-- **협업 능력**: 협업을 통한 프로젝트 관리 경험
-- **UI/UX**: 사용자 중심의 인터페이스 설계 및 구현
 
 ---
 
@@ -921,81 +1104,7 @@ glossymatcha/
 
 ---
 
-## 16. 📂 프로젝트 구조
-
-<details>
-<summary>프로젝트 폴더 구조</summary>
-
-```
-Glossy_Matcha/
-├── be/                              # Django 백엔드
-│   ├── glossy/                      # 프로젝트 설정
-│   │   ├── settings.py              # Django 설정
-│   │   ├── urls.py                  # 메인 URL 라우팅
-│   │   └── wsgi.py                  # WSGI 설정
-│   ├── glossymatcha/                # 메인 앱
-│   │   ├── models.py                # 데이터베이스 모델
-│   │   ├── views.py                 # 뷰 로직 (API + 템플릿)
-│   │   ├── serializers.py           # DRF 시리얼라이저
-│   │   ├── urls.py                  # 앱 URL 라우팅
-│   │   ├── admin.py                 # Django Admin 설정
-│   │   ├── forms.py                 # Django Forms
-│   │   └── templates/               # Django 템플릿
-│   │       └── glossymatcha/
-│   │           ├── base.html        # 기본 템플릿
-│   │           ├── dashboard.html   # 대시보드
-│   │           ├── staff/           # 직원 관리 템플릿
-│   │           ├── suppliers/       # 거래처 관리 템플릿
-│   │           ├── sales/           # 매출 관리 템플릿
-│   │           └── inquiries/       # 문의 관리 템플릿
-│   ├── static/                      # 정적 파일
-│   ├── media/                       # 업로드 파일
-│   ├── db.sqlite3                   # SQLite 데이터베이스
-│   └── manage.py                    # Django 관리 명령어
-├── fe/                              # Next.js 프론트엔드
-│   ├── src/
-│   │   ├── app/                     # App Router 페이지
-│   │   │   ├── [locale]/            # 다국어 라우팅
-│   │   │   │   ├── page.tsx         # 메인 페이지
-│   │   │   │   ├── about/           # 브랜드 소개
-│   │   │   │   ├── products/        # 제품 페이지
-│   │   │   │   ├── glossypick/      # 체험형 콘텐츠
-│   │   │   │   └── inquire/         # 문의하기
-│   │   │   └── layout.tsx           # 루트 레이아웃
-│   │   ├── components/              # React 컴포넌트
-│   │   │   ├── Header/              # 헤더 컴포넌트
-│   │   │   ├── Footer/              # 푸터 컴포넌트
-│   │   │   ├── Home/                # 메인 페이지 컴포넌트
-│   │   │   ├── About/               # 브랜드 소개 컴포넌트
-│   │   │   ├── Product/             # 제품 관련 컴포넌트
-│   │   │   ├── GlossyPick/          # 글로시픽 컴포넌트
-│   │   │   └── Inquire/             # 문의하기 컴포넌트
-│   │   ├── services/                # API 서비스
-│   │   │   ├── productApi.ts        # 제품 API
-│   │   │   └── inquireApi.ts        # 문의 API
-│   │   ├── hooks/                   # 커스텀 훅
-│   │   ├── types/                   # TypeScript 타입 정의
-│   │   ├── data/                    # 정적 데이터
-│   │   ├── utils/                   # 유틸리티 함수
-│   │   └── styles/                  # 글로벌 스타일
-│   ├── public/                      # 정적 파일
-│   │   ├── images/                  # 이미지 파일
-│   │   └── videos/                  # 비디오 파일
-│   ├── messages/                    # 다국어 메시지
-│   │   ├── ko.json                  # 한국어
-│   │   └── en.json                  # 영어
-│   ├── package.json                 # 의존성 관리
-│   ├── next.config.ts               # Next.js 설정
-│   └── tsconfig.json                # TypeScript 설정
-├── WBS.md                           # 작업 분해 구조
-└── README.md                        # 프로젝트 문서
-```
-
-</details>
-
----
-
-## 17. 🤝 기여 방법
+## 16. 🤝 기여 방법
 
 ### 개발 참여
 
@@ -1007,7 +1116,7 @@ Glossy_Matcha/
 
 ---
 
-## 18. 🙏 감사의 글
+## 17. 🙏 감사의 글
 
 이 프로젝트는 다음과 같은 오픈소스 라이브러리와 도구들의 도움으로 완성되었습니다:
 
