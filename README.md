@@ -17,9 +17,9 @@
 - **프론트엔드**
   - **글로벌 브랜드 웹사이트**: https://glossymatcha.com
 - **백엔드**
-  - **매장 운영 대시보드**: https://a92fj39af.glossymatcha.com
-  - **제품 API 서버**: https://x81fj32kd.glossymatcha.com/api/products
-  - **문의 API 서버**: https://x81fj32kd.glossymatcha.com/api/inquiries
+  - **매장 운영 대시보드**: https://admin.glossymatcha.com
+  - **제품 API 서버**: https://admin.glossymatcha.com/api/products
+  - **문의 API 서버**: https://admin.glossymatcha.com/api/inquiries
 
 ### 기업 요구사항 명세
 > **우선순위 : [1] > [2]**
@@ -210,7 +210,7 @@
     - **정량적 성과:**
       - **개발 기간**: 19일만에 두 개 서비스 동시 구현 완료
       - **운영 비용**: 단일 서버로 두 서비스 운영
-      - **보안 강화**: HTTPS 적용 + 서브도메인 난독화로 보안 수준 향상
+      - **보안 강화**: HTTPS 적용으로 보안 수준 향상
 
     - **정성적 성과:**
       - **사용자 만족도**: 매장 직원들의 업무 효율성 개선
@@ -426,7 +426,6 @@ GitHub Push → GitHub Actions → 자동 테스트 → AWS 배포 → 서비스
 
 > **보안 강화 조치**
 - **HTTPS 인증서**: Let's Encrypt 자동 갱신
-- **서브도메인 난독화**: `a92fj39af.glossymatcha.com`, `x81fj32kd.glossymatcha.com` (무차별 대입 공격 방지)
 - **IP 접속 차단**: 도메인 기반 접근만 허용
 
 **2. 실무 중심의 비즈니스 로직**
@@ -792,21 +791,14 @@ Django Admin 제품 수정 → 즉시 DB 저장 → Next.js API 호출 시 최�
 - **신뢰성 향상**: 브라우저 보안 경고 제거 및 사용자 신뢰도 증가
 - **SEO 최적화**: Google 등 검색엔진의 HTTPS 사이트 우선 순위 적용
 
-#### 도메인 보안 강화
-- **서브도메인 난독화**: 예측 가능한 URL을 난수 형태로 변경하여 무차별 대입 공격 방지
-  - 변경 전: `admin.glossymatcha.com`, `api.glossymatcha.com`
-  - 변경 후: `a92fj39af.glossymatcha.com`, `x81fj32kd.glossymatcha.com`
-- **IP 접속 차단**: 직접 IP 접근 차단으로 서버 노출 최소화
-
 #### 구현 방법
 ```bash
 # 1. SSL 인증서 발급
-sudo certbot --nginx -d a92fj39af.glossymatcha.com
-sudo certbot --nginx -d x81fj32kd.glossymatcha.com
+sudo certbot --nginx -d admin.glossymatcha.com
 
 # 2. Nginx 설정에 HTTPS 리다이렉트 추가
-# HTTP → HTTPS 자동 리다이렉트
-# IP 접속 → 도메인 리다이렉트
+HTTP → HTTPS 자동 리다이렉트
+IP 접속 → 도메인 리다이렉트
 
 # 3. Django 보안 설정 추가
 SECURE_SSL_REDIRECT = True
