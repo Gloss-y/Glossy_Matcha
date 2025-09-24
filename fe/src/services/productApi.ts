@@ -84,7 +84,7 @@ const mockProducts: Product[] = [
   ---
   자연의 은은한 단 맛을 부담없이||대체당과 코코넛슈가, 대나무수액 원당의 블랜딩으로\n당류 부담은 낮추고, 인위적인 대체당의 맛 대신에\n원당의 자연스런 단맛과 풍미를 즐기세요.\n(1회 섭취량 기준 당류 1g)
   ---
-  휴대성과 간편성은 더 강화한 감각적인 디자인||꽂아두기 쉬운 세로형 스틱과 슬라이드형 패키지.\n그리고 이지컷 방식으로 제작된 상단부로 더 편리해요`,
+  휴대성과 간편성은 더 강화한 감각적인 디자인||꽂아두기 쉬운 세로형 스틱과 슬라이드형 패키지.\n그리고 이지컷 방식으로 제작된 상단부로 더 편리해요.`,
       sub_description_en: `Enjoy Matcha Easily, Anytime||Skip the whisk and bowl—just one 10g stick completes your matcha drink with ease.
   ---
   Organic Matcha from Jeju's First Spring Leaves||Although there is no ceremonial-grade certification body in Korea,\nGlossy Matcha meets Japan's ceremonial-grade standards, using the first flush and very first leaves of spring for true organic matcha.
@@ -243,7 +243,7 @@ const mockProducts: Product[] = [
     }
   ];
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://x81fj32kd.glossymatcha.com/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://admin.glossymatcha.com/api";
 
 class ProductApi {
   /**

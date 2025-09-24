@@ -23,35 +23,29 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, lang }) => {
     const currentLocale = useCurrentLocale();
 
     /**
-     * 제품 이미지 중 'details'가 포함된 상세 이미지만 필터링
+     * note 필드에서 상세 이미지 경로 추출
+     * 형식: "||DETAILS:/images/product/signature-details.jpg"
      */
-    const detailsImages = product.images?.filter(img => 
-        img.image.toLowerCase().includes('details')
-    ) || [];
-
-    if (detailsImages.length === 0) {
-        return null;
-    }
+    const getDetailsImageFromNote = (noteField: string | undefined): string | null => {
+        if (!noteField) return null;
+        
+        const match = noteField.match(/\|\|DETAILS:(.+)/);
+        return match ? match[1] : null;
+    };
 
     /**
      * 언어에 따라 적절한 상세 이미지 선택
-     * - 영어: details-en.jpg 우선, 없으면 기본 details.jpg
-     * - 한국어: details.jpg (영어용 제외)
+     * - 영어: note_en 필드 우선, 없으면 note 필드
+     * - 한국어: note 필드
      */
-    let selectedImage;
+    let selectedImagePath;
     if (lang === 'en') {
-        selectedImage = detailsImages.find(img => 
-            img.image.toLowerCase().includes('details-en')
-        ) || detailsImages.find(img => 
-            img.image.toLowerCase().includes('details') && !img.image.toLowerCase().includes('details-en')
-        );
+        selectedImagePath = getDetailsImageFromNote(product.note_en) || getDetailsImageFromNote(product.note);
     } else {
-        selectedImage = detailsImages.find(img => 
-            img.image.toLowerCase().includes('details') && !img.image.toLowerCase().includes('details-en')
-        );
+        selectedImagePath = getDetailsImageFromNote(product.note);
     }
 
-    if (!selectedImage) {
+    if (!selectedImagePath) {
         return null;
     }
 
@@ -85,7 +79,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, lang }) => {
                 <div className={styles.detailsContent}>
                     <div className={styles.detailsImageWrapper}>
                         <img 
-                            src={selectedImage.image}
+                            src={selectedImagePath}
                             alt="Product Details"
                             className={styles.detailsImage}
                         />

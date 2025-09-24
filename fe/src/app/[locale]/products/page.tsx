@@ -127,7 +127,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ params }) => {
                 const [title = '', content = ''] = section.split('||').map(part => part.trim());
                 if (!title) return null;
                 
-                const imageIndex = index + 1;
+                const imageIndex = index;
                 const assignedImage = currentProduct?.images?.[imageIndex]?.image;
                 
                 return {
