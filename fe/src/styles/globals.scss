@@ -30,6 +30,12 @@ button:focus {
   font-weight: $font-weight-medium;
   line-height: 28px;
   word-break: keep-all;
+  border: none;
+  outline: none;
+
+  &:focus {
+    outline: none;
+  }
 
   &:hover {
     background-color: $color-green-700;

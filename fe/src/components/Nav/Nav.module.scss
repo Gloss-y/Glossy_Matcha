@@ -35,6 +35,10 @@
   border: none;
   cursor: pointer;
   outline: none;
+  
+  &:focus {
+    outline: none;
+  }
 
   &:hover {
     color: $color-green-500;

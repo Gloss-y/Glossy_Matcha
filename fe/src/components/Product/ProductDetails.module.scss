@@ -16,6 +16,11 @@
   gap: 8px;
   cursor: pointer;
   user-select: none;
+  outline: none;
+  
+  &:focus {
+    outline: none;
+  }
   
   .detailsText {
     font-family: 'Pretendard', sans-serif;
